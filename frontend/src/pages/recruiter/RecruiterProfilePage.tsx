@@ -6,7 +6,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton, PageHeader } from "@/components/shared/SharedComponents";
+import { Skeleton, PageHeader, ProfileRow } from "@/components/shared/SharedComponents";
 import { getInitials } from "@/lib/utils";
 import {
   BuildingIcon,
@@ -15,44 +15,8 @@ import {
   AlignLeftIcon,
   BriefcaseIcon,
   SparklesIcon,
-  ExternalLinkIcon,
 } from "lucide-react";
 
-function ProfileRow({
-  icon,
-  label,
-  value,
-  isLink,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | null;
-  isLink?: boolean;
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-lg border border-border/75 bg-card/75 p-3.5 shadow-[0_1px_2px_hsl(222_38%_9%/0.025)] transition-colors hover:border-primary/25 hover:bg-card">
-      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary shadow-sm ring-1 ring-primary/15">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        {isLink && value ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-0.5 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            Visit website
-            <ExternalLinkIcon className="h-3.5 w-3.5" />
-          </a>
-        ) : (
-          <p className="text-sm font-medium break-all">{value || "Not provided"}</p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export function RecruiterProfilePage() {
   const { data: profile, isLoading } = useQuery({
@@ -130,6 +94,7 @@ export function RecruiterProfilePage() {
               label="Website"
               value={profile?.companyWebsite ?? null}
               isLink
+              linkLabel="Visit website"
             />
             <ProfileRow
               icon={<BriefcaseIcon className="h-4 w-4" />}

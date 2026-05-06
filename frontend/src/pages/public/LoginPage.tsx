@@ -8,7 +8,7 @@ import { useAuth } from "@/store/authStore";
 import { authService } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/shared/SharedComponents";
+import { FormField, InlineAlert, AuthPageHeader } from "@/components/shared/SharedComponents";
 import { BriefcaseIcon, MailIcon, LockIcon } from "lucide-react";
 import { AxiosError } from "axios";
 import { ApiError } from "@/types";
@@ -68,16 +68,12 @@ export function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-sm"
       >
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_1px_2px_hsl(var(--primary)/0.25),0_12px_24px_hsl(var(--primary)/0.18)]">
-            <BriefcaseIcon className="h-6 w-6" />
-          </div>
-          <h1 className="text-2xl font-semibold">Welcome back</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
-        </div>
+        <AuthPageHeader
+          icon={<BriefcaseIcon className="h-6 w-6" />}
+          title="Welcome back"
+          subtitle="Sign in to your account"
+        />
 
-        {/* Card */}
         <div className="surface-card p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <FormField label="Email" error={errors.email?.message} required>
@@ -100,7 +96,7 @@ export function LoginPage() {
                 <Input
                   id="login-password"
                   type="password"
-                  placeholder="********"
+                  placeholder="••••••••"
                   className="pl-9"
                   autoComplete="current-password"
                   {...register("password")}
@@ -109,9 +105,7 @@ export function LoginPage() {
             </FormField>
 
             {mutation.isError && (
-              <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-                {getErrorMessage(mutation.error)}
-              </div>
+              <InlineAlert type="error" message={getErrorMessage(mutation.error)} />
             )}
 
             <Button
@@ -127,11 +121,11 @@ export function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
-          <Link to="/register/candidate" className="text-foreground font-medium hover:underline">
+          <Link to="/register/candidate" className="font-medium text-foreground hover:underline">
             Register as Candidate
           </Link>
           {" / "}
-          <Link to="/register/recruiter" className="text-foreground font-medium hover:underline">
+          <Link to="/register/recruiter" className="font-medium text-foreground hover:underline">
             Register as Recruiter
           </Link>
         </p>

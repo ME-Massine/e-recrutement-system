@@ -132,7 +132,7 @@ export function JobOffersPage() {
       {isLoading && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-3 rounded-lg border border-border/80 bg-card/95 p-5 shadow-[0_1px_2px_hsl(222_38%_9%/0.04),0_8px_22px_hsl(222_38%_9%/0.035)]">
+            <div key={i} className="surface-card p-5 space-y-3">
               <Skeleton className="h-5 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
               <Skeleton className="h-4 w-full" />
@@ -236,12 +236,6 @@ export function JobOffersPage() {
                           </div>
                         ))}
                       </div>
-                      <details className="mt-3 text-[11px] text-muted-foreground">
-                        <summary className="cursor-pointer select-none">Scoring details</summary>
-                        <p className="mt-1">
-                          Rule-based: {offer.match.ruleBasedScore}% | Semantic: {offer.match.semanticScore}%
-                        </p>
-                      </details>
                     </div>
                   )}
 

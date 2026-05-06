@@ -8,7 +8,7 @@ import { useAuth } from "@/store/authStore";
 import { authService } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormField } from "@/components/shared/SharedComponents";
+import { FormField, FormGrid, InlineAlert, AuthPageHeader } from "@/components/shared/SharedComponents";
 import { BuildingIcon, MailIcon, LockIcon } from "lucide-react";
 import { AxiosError } from "axios";
 import { ApiError } from "@/types";
@@ -76,24 +76,22 @@ export function RegisterRecruiterPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-sm"
       >
-        <div className="mb-8 flex flex-col items-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_1px_2px_hsl(var(--primary)/0.25),0_12px_24px_hsl(var(--primary)/0.18)]">
-            <BuildingIcon className="h-6 w-6" />
-          </div>
-          <h1 className="text-2xl font-semibold">Post your first job</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Register as a recruiter to start hiring</p>
-        </div>
+        <AuthPageHeader
+          icon={<BuildingIcon className="h-6 w-6" />}
+          title="Post your first job"
+          subtitle="Register as a recruiter to start hiring"
+        />
 
         <div className="surface-card p-6">
           <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <FormGrid>
               <FormField label="First Name" error={errors.firstName?.message} required>
                 <Input id="reg-r-firstname" placeholder="Amine" {...register("firstName")} />
               </FormField>
               <FormField label="Last Name" error={errors.lastName?.message} required>
                 <Input id="reg-r-lastname" placeholder="Moussaid" {...register("lastName")} />
               </FormField>
-            </div>
+            </FormGrid>
 
             <FormField label="Company Name" error={errors.companyName?.message} required>
               <div className="relative">
@@ -112,21 +110,19 @@ export function RegisterRecruiterPage() {
             <FormField label="Password" error={errors.password?.message} required>
               <div className="relative">
                 <LockIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="reg-r-password" type="password" placeholder="********" className="pl-9" {...register("password")} />
+                <Input id="reg-r-password" type="password" placeholder="••••••••" className="pl-9" {...register("password")} />
               </div>
             </FormField>
 
             <FormField label="Confirm Password" error={errors.confirmPassword?.message} required>
               <div className="relative">
                 <LockIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="reg-r-confirm" type="password" placeholder="********" className="pl-9" {...register("confirmPassword")} />
+                <Input id="reg-r-confirm" type="password" placeholder="••••••••" className="pl-9" {...register("confirmPassword")} />
               </div>
             </FormField>
 
             {mutation.isError && (
-              <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-                {getError(mutation.error)}
-              </div>
+              <InlineAlert type="error" message={getError(mutation.error)} />
             )}
 
             <Button type="submit" className="w-full" loading={mutation.isPending} id="reg-r-submit">
@@ -137,9 +133,9 @@ export function RegisterRecruiterPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link to="/login" className="text-foreground font-medium hover:underline">Sign in</Link>
+          <Link to="/login" className="font-medium text-foreground hover:underline">Sign in</Link>
           {" / "}
-          <Link to="/register/candidate" className="text-foreground font-medium hover:underline">Candidate?</Link>
+          <Link to="/register/candidate" className="font-medium text-foreground hover:underline">Candidate?</Link>
         </p>
       </motion.div>
     </div>

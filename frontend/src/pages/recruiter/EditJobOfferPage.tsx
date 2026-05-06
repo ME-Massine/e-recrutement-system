@@ -19,6 +19,10 @@ import {
 import {
   ErrorDisplay,
   FormField,
+  FormSection,
+  FormGrid,
+  FormActions,
+  InlineAlert,
   PageHeader,
   Skeleton,
 } from "@/components/shared/SharedComponents";
@@ -99,63 +103,66 @@ function EditJobForm({ offer, offerId }: { offer: JobOffer; offerId: number }) {
   });
 
   return (
-    <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="space-y-5">
-      <FormField label="Job Title" error={errors.title?.message} required>
-        <Input id="edit-job-title" {...register("title")} />
-      </FormField>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <FormField label="Contract Type" error={errors.contractType?.message} required>
-          <Controller
-            name="contractType"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger id="edit-job-contract">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CDI">Permanent (CDI)</SelectItem>
-                  <SelectItem value="CDD">Fixed-term (CDD)</SelectItem>
-                  <SelectItem value="STAGE">Internship</SelectItem>
-                  <SelectItem value="FREELANCE">Freelance</SelectItem>
-                  <SelectItem value="INTERIM">Temporary</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
+    <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="space-y-6">
+      <FormSection title="Position">
+        <FormField label="Job Title" error={errors.title?.message} required>
+          <Input id="edit-job-title" {...register("title")} />
         </FormField>
-
-        <FormField label="Location" error={errors.location?.message} required>
-          <Input id="edit-job-location" {...register("location")} />
+        <FormGrid>
+          <FormField label="Contract Type" error={errors.contractType?.message} required>
+            <Controller
+              name="contractType"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger id="edit-job-contract">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CDI">Permanent (CDI)</SelectItem>
+                    <SelectItem value="CDD">Fixed-term (CDD)</SelectItem>
+                    <SelectItem value="STAGE">Internship</SelectItem>
+                    <SelectItem value="FREELANCE">Freelance</SelectItem>
+                    <SelectItem value="INTERIM">Temporary</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </FormField>
+          <FormField label="Location" error={errors.location?.message} required>
+            <Input id="edit-job-location" {...register("location")} />
+          </FormField>
+        </FormGrid>
+        <FormField label="Monthly Salary (MAD)" error={errors.salary?.message} description="Leave blank if not specified">
+          <Input id="edit-job-salary" type="number" {...register("salary")} />
         </FormField>
-      </div>
+      </FormSection>
 
-      <FormField label="Monthly Salary (MAD)" error={errors.salary?.message}>
-        <Input id="edit-job-salary" type="number" {...register("salary")} />
-      </FormField>
+      <FormSection title="Requirements">
+        <FormGrid>
+          <FormField label="Required Skills (comma-separated)" error={errors.requiredSkills?.message}>
+            <Input
+              id="edit-job-required-skills"
+              placeholder="Java, Spring Boot, PostgreSQL"
+              {...register("requiredSkills")}
+            />
+          </FormField>
+          <FormField label="Required Experience (years)" error={errors.requiredExperienceYears?.message}>
+            <Input
+              id="edit-job-required-exp"
+              type="number"
+              min="0"
+              {...register("requiredExperienceYears")}
+            />
+          </FormField>
+        </FormGrid>
+      </FormSection>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <FormField label="Required Skills (comma-separated)" error={errors.requiredSkills?.message}>
-          <Input
-            id="edit-job-required-skills"
-            placeholder="Java, Spring Boot, PostgreSQL"
-            {...register("requiredSkills")}
-          />
+      <FormSection title="Description">
+        <FormField label="Job Description" error={errors.description?.message} required>
+          <Textarea id="edit-job-description" className="min-h-[160px]" {...register("description")} />
         </FormField>
-        <FormField label="Required Experience (years)" error={errors.requiredExperienceYears?.message}>
-          <Input
-            id="edit-job-required-exp"
-            type="number"
-            min="0"
-            {...register("requiredExperienceYears")}
-          />
-        </FormField>
-      </div>
-
-      <FormField label="Job Description" error={errors.description?.message} required>
-        <Textarea id="edit-job-description" className="min-h-[160px]" {...register("description")} />
-      </FormField>
+      </FormSection>
 
       <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/45 p-4">
         <Controller
@@ -177,12 +184,10 @@ function EditJobForm({ offer, offerId }: { offer: JobOffer; offerId: number }) {
       </div>
 
       {mutation.isError && (
-        <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-          Failed to update job offer.
-        </div>
+        <InlineAlert type="error" message="Failed to update job offer. Please try again." />
       )}
 
-      <div className="flex gap-3 pt-2">
+      <FormActions>
         <Button type="button" variant="outline" asChild>
           <Link to="/recruiter/job-offers">Cancel</Link>
         </Button>
@@ -190,7 +195,7 @@ function EditJobForm({ offer, offerId }: { offer: JobOffer; offerId: number }) {
           <SaveIcon className="h-4 w-4" />
           Save Changes
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

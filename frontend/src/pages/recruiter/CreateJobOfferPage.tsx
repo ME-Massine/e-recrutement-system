@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,9 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormField, PageHeader } from "@/components/shared/SharedComponents";
+import {
+  FormField,
+  FormSection,
+  FormGrid,
+  FormActions,
+  InlineAlert,
+  PageHeader,
+} from "@/components/shared/SharedComponents";
 import { ArrowLeftIcon, PlusCircleIcon } from "lucide-react";
-import { Controller } from "react-hook-form";
 
 const CONTRACT_TYPES = ["CDI", "CDD", "STAGE", "FREELANCE", "INTERIM"] as const;
 
@@ -82,59 +88,62 @@ export function CreateJobOfferPage() {
       <PageHeader title="Post a New Job" description="Create a job offer and start receiving applications" />
 
       <div className="surface-card p-6">
-        <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="space-y-5">
-          <FormField label="Job Title" error={errors.title?.message} required>
-            <Input id="create-job-title" placeholder="e.g. Java Backend Developer" {...register("title")} />
-          </FormField>
+        <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="space-y-6">
+          <FormSection title="Position">
+            <FormField label="Job Title" error={errors.title?.message} required>
+              <Input id="create-job-title" placeholder="e.g. Java Backend Developer" {...register("title")} />
+            </FormField>
+            <FormGrid>
+              <FormField label="Contract Type" error={errors.contractType?.message} required>
+                <Controller
+                  name="contractType"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="create-job-contract">
+                        <SelectValue placeholder="Select type…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CDI">Permanent (CDI)</SelectItem>
+                        <SelectItem value="CDD">Fixed-term (CDD)</SelectItem>
+                        <SelectItem value="STAGE">Internship</SelectItem>
+                        <SelectItem value="FREELANCE">Freelance</SelectItem>
+                        <SelectItem value="INTERIM">Temporary</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </FormField>
+              <FormField label="Location" error={errors.location?.message} required>
+                <Input id="create-job-location" placeholder="e.g. Casablanca" {...register("location")} />
+              </FormField>
+            </FormGrid>
+            <FormField label="Monthly Salary (MAD)" error={errors.salary?.message} description="Leave blank if not specified">
+              <Input id="create-job-salary" type="number" placeholder="e.g. 12000" {...register("salary")} />
+            </FormField>
+          </FormSection>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField label="Contract Type" error={errors.contractType?.message} required>
-              <Controller
-                name="contractType"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger id="create-job-contract">
-                      <SelectValue placeholder="Select type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CDI">Permanent (CDI)</SelectItem>
-                      <SelectItem value="CDD">Fixed-term (CDD)</SelectItem>
-                      <SelectItem value="STAGE">Internship</SelectItem>
-                      <SelectItem value="FREELANCE">Freelance</SelectItem>
-                      <SelectItem value="INTERIM">Temporary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+          <FormSection title="Requirements">
+            <FormGrid>
+              <FormField label="Required Skills (comma-separated)" error={errors.requiredSkills?.message}>
+                <Input id="create-job-required-skills" placeholder="Java, Spring Boot, PostgreSQL" {...register("requiredSkills")} />
+              </FormField>
+              <FormField label="Required Experience (years)" error={errors.requiredExperienceYears?.message}>
+                <Input id="create-job-required-exp" type="number" min="0" placeholder="e.g. 3" {...register("requiredExperienceYears")} />
+              </FormField>
+            </FormGrid>
+          </FormSection>
+
+          <FormSection title="Description">
+            <FormField label="Job Description" error={errors.description?.message} required>
+              <Textarea
+                id="create-job-description"
+                placeholder="Describe the role, responsibilities, and requirements…"
+                className="min-h-[160px]"
+                {...register("description")}
               />
             </FormField>
-
-            <FormField label="Location" error={errors.location?.message} required>
-              <Input id="create-job-location" placeholder="e.g. Casablanca" {...register("location")} />
-            </FormField>
-          </div>
-
-          <FormField label="Monthly Salary (MAD)" error={errors.salary?.message} description="Leave blank if not specified">
-            <Input id="create-job-salary" type="number" placeholder="e.g. 12000" {...register("salary")} />
-          </FormField>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField label="Required Skills (comma-separated)" error={errors.requiredSkills?.message}>
-              <Input id="create-job-required-skills" placeholder="Java, Spring Boot, PostgreSQL" {...register("requiredSkills")} />
-            </FormField>
-            <FormField label="Required Experience (years)" error={errors.requiredExperienceYears?.message}>
-              <Input id="create-job-required-exp" type="number" min="0" placeholder="e.g. 3" {...register("requiredExperienceYears")} />
-            </FormField>
-          </div>
-
-          <FormField label="Job Description" error={errors.description?.message} required>
-            <Textarea
-              id="create-job-description"
-              placeholder="Describe the role, responsibilities, and requirements..."
-              className="min-h-[160px]"
-              {...register("description")}
-            />
-          </FormField>
+          </FormSection>
 
           <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/45 p-4">
             <Controller
@@ -150,18 +159,16 @@ export function CreateJobOfferPage() {
                 />
               )}
             />
-            <label htmlFor="create-job-active" className="text-sm font-medium cursor-pointer">
+            <label htmlFor="create-job-active" className="cursor-pointer text-sm font-medium">
               Publish immediately (make offer active)
             </label>
           </div>
 
           {mutation.isError && (
-            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-              Failed to create job offer. Please try again.
-            </div>
+            <InlineAlert type="error" message="Failed to create job offer. Please try again." />
           )}
 
-          <div className="flex gap-3 pt-2">
+          <FormActions>
             <Button type="button" variant="outline" asChild>
               <Link to="/recruiter/job-offers">Cancel</Link>
             </Button>
@@ -169,7 +176,7 @@ export function CreateJobOfferPage() {
               <PlusCircleIcon className="h-4 w-4" />
               Post Job Offer
             </Button>
-          </div>
+          </FormActions>
         </form>
       </div>
     </div>

@@ -9,7 +9,14 @@ import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FormField, PageHeader, Skeleton } from "@/components/shared/SharedComponents";
+import {
+  FormField,
+  FormGrid,
+  FormActions,
+  InlineAlert,
+  PageHeader,
+  Skeleton,
+} from "@/components/shared/SharedComponents";
 import { ArrowLeftIcon, SaveIcon } from "lucide-react";
 import { AxiosError } from "axios";
 import { ApiError } from "@/types";
@@ -69,11 +76,7 @@ export function EditRecruiterProfilePage() {
   const getErrorMessage = (error: unknown) => {
     if (error instanceof AxiosError) {
       const data = error.response?.data as ApiError;
-      return (
-        data?.detail ||
-        data?.error ||
-        "Failed to update profile. Please try again."
-      );
+      return data?.detail || data?.error || "Failed to update profile. Please try again.";
     }
     return "Failed to update profile. Please try again.";
   };
@@ -97,14 +100,14 @@ export function EditRecruiterProfilePage() {
             <Input id="edit-r-company" placeholder="TechCorp" {...register("companyName")} />
           </FormField>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormGrid>
             <FormField label="Company Website" error={errors.companyWebsite?.message}>
               <Input id="edit-r-website" type="url" placeholder="https://techcorp.com" {...register("companyWebsite")} />
             </FormField>
             <FormField label="Sector / Industry" error={errors.companySector?.message}>
               <Input id="edit-r-sector" placeholder="Software Engineering" {...register("companySector")} />
             </FormField>
-          </div>
+          </FormGrid>
 
           <FormField label="Company Description" error={errors.companyDescription?.message} description="Tell candidates about your company (max 1000 characters)">
             <Textarea
@@ -116,12 +119,10 @@ export function EditRecruiterProfilePage() {
           </FormField>
 
           {mutation.isError && (
-            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-              {getErrorMessage(mutation.error)}
-            </div>
+            <InlineAlert type="error" message={getErrorMessage(mutation.error)} />
           )}
 
-          <div className="flex gap-3 pt-2">
+          <FormActions>
             <Button type="button" variant="outline" asChild>
               <Link to="/recruiter/profile">
                 <ArrowLeftIcon className="h-4 w-4" />
@@ -132,10 +133,9 @@ export function EditRecruiterProfilePage() {
               <SaveIcon className="h-4 w-4" />
               Save Changes
             </Button>
-          </div>
+          </FormActions>
         </form>
       </div>
     </div>
   );
 }
-

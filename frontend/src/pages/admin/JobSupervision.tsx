@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import adminService from "../../services/adminService";
 import { JobOffer } from "../../types";
-import { Search, Trash2, MapPin, Briefcase, Calendar, AlertCircle, Eye, X, DollarSign, ShieldAlert } from "lucide-react";
+import { Search, Trash2, MapPin, Briefcase, Calendar, Eye, DollarSign, ShieldAlert } from "lucide-react";
+import { PageHeader, Skeleton, EmptyState, Modal } from "@/components/shared/SharedComponents";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const JobSupervision: React.FC = () => {
   const [jobs, setJobs] = useState<JobOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedJob, setSelectedJob] = useState<JobOffer | null>(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   useEffect(() => {
     fetchJobs();
@@ -32,201 +35,185 @@ const JobSupervision: React.FC = () => {
     try {
       await adminService.deleteJob(selectedJob.id);
       setJobs(jobs.filter((j) => j.id !== selectedJob.id));
-      setIsDeleteModalOpen(false);
-      setIsDetailsModalOpen(false);
+      setIsDeleteOpen(false);
+      setIsDetailsOpen(false);
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to delete job", error);
     }
   };
 
-  const openDetailsModal = (job: JobOffer) => {
-    setSelectedJob(job);
-    setIsDetailsModalOpen(true);
-  };
-
-  const openDeleteModal = () => {
-    setIsDeleteModalOpen(true);
-  };
-
-  const filteredJobs = jobs.filter((job) => 
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.recruiterEmail.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredJobs = jobs.filter(
+    (job) =>
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.recruiterEmail.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <div className="p-8 text-center">Loading job offers...</div>;
-
   return (
-    <div className="space-y-8 animate-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Supervise Job Offers</h1>
-          <p className="text-muted-foreground mt-2">Monitor and remove non-compliant job postings.</p>
-        </div>
-        
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search jobs..."
-            className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 w-full md:w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+    <div className="page-shell animate-in">
+      <PageHeader
+        title="Supervise Job Offers"
+        description="Monitor and remove non-compliant job postings."
+        action={
+          <div className="relative w-full sm:w-64">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search jobs…"
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        }
+      />
 
-      {filteredJobs.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6">
+      {loading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
+        </div>
+      ) : filteredJobs.length === 0 ? (
+        <EmptyState
+          icon={<Briefcase className="h-12 w-12" />}
+          title="No job offers found"
+          description="Try adjusting your search filters."
+        />
+      ) : (
+        <div className="space-y-3">
           {filteredJobs.map((job) => (
-            <div key={job.id} className="surface-card p-6 flex flex-col md:flex-row justify-between gap-6 surface-card-hover">
-              <div className="flex-1 space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-foreground">{job.title}</h3>
-                    <p className="text-sm text-primary font-semibold">By {job.recruiterEmail}</p>
+            <div key={job.id} className="list-row p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold">{job.title}</h3>
+                    <Badge variant={job.active ? "success" : "secondary"}>
+                      {job.active ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${job.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
-                    {job.active ? "Active" : "Inactive"}
-                  </span>
+                  <p className="mb-2 text-xs font-medium text-primary">{job.recruiterEmail}</p>
+                  <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                    {job.description}
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />{job.location}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Briefcase className="h-3 w-3" />{job.contractType}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />{new Date(job.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
-                
-                <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">{job.description}</p>
-                
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center"><MapPin className="w-4 h-4 mr-1.5 opacity-70" /> {job.location}</div>
-                  <div className="flex items-center"><Briefcase className="w-4 h-4 mr-1.5 opacity-70" /> {job.contractType}</div>
-                  <div className="flex items-center"><Calendar className="w-4 h-4 mr-1.5 opacity-70" /> {new Date(job.createdAt).toLocaleDateString()}</div>
-                </div>
-              </div>
-
-              <div className="flex md:flex-col justify-end gap-3">
-                <button
-                  onClick={() => openDetailsModal(job)}
-                  className="flex items-center justify-center p-3 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                  title="View Details"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => { setSelectedJob(job); setIsDetailsOpen(true); }}
                 >
-                  <Eye className="w-5 h-5" />
-                  <span className="ml-2 md:hidden">View</span>
-                </button>
+                  <Eye className="h-3.5 w-3.5" />
+                  View
+                </Button>
               </div>
             </div>
           ))}
         </div>
-      ) : (
-        <div className="bg-muted/30 p-12 rounded-lg text-center border-2 border-dashed border-border">
-          <AlertCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground">No job offers found</h3>
-          <p className="text-muted-foreground">Try adjusting your search filters.</p>
-        </div>
       )}
 
-      {isDetailsModalOpen && selectedJob && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-card w-full max-w-2xl rounded-lg shadow-[0_20px_60px_hsl(222_38%_9%/0.18)] overflow-hidden animate-in zoom-in-95 my-8">
-            <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-foreground">Job Offer Details</h3>
-              <button onClick={() => setIsDetailsModalOpen(false)} className="text-muted-foreground hover:text-foreground">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+      <Modal
+        open={isDetailsOpen && !!selectedJob}
+        onClose={() => setIsDetailsOpen(false)}
+        title="Job Offer Details"
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setIsDeleteOpen(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Job
+            </Button>
+            <Button size="sm" onClick={() => setIsDetailsOpen(false)}>
+              Close
+            </Button>
+          </>
+        }
+      >
+        {selectedJob && (
+          <div className="space-y-5">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-2xl font-bold text-foreground">{selectedJob.title}</h4>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${selectedJob.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
-                    {selectedJob.active ? "Active" : "Inactive"}
-                  </span>
-                </div>
-                <p className="text-primary font-medium flex items-center">
-                  <Briefcase className="w-4 h-4 mr-2" />
-                  {selectedJob.recruiterEmail}
-                </p>
+                <h3 className="text-lg font-semibold">{selectedJob.title}</h3>
+                <p className="mt-1 text-sm font-medium text-primary">{selectedJob.recruiterEmail}</p>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground mb-1 flex items-center"><MapPin className="w-3 h-3 mr-1"/> Location</p>
-                  <p className="font-semibold text-sm">{selectedJob.location}</p>
-                </div>
-                <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground mb-1 flex items-center"><Briefcase className="w-3 h-3 mr-1"/> Contract</p>
-                  <p className="font-semibold text-sm">{selectedJob.contractType}</p>
-                </div>
-                <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground mb-1 flex items-center"><DollarSign className="w-3 h-3 mr-1"/> Salary</p>
-                  <p className="font-semibold text-sm">{selectedJob.salary ? `$${selectedJob.salary}` : "Not specified"}</p>
-                </div>
-                <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground mb-1 flex items-center"><Calendar className="w-3 h-3 mr-1"/> Posted</p>
-                  <p className="font-semibold text-sm">{new Date(selectedJob.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-
-              <div>
-                <h5 className="font-semibold mb-2">Description</h5>
-                <div className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
-                  {selectedJob.description}
-                </div>
-              </div>
+              <Badge variant={selectedJob.active ? "success" : "secondary"}>
+                {selectedJob.active ? "Active" : "Inactive"}
+              </Badge>
             </div>
-            <div className="p-6 border-t border-border bg-muted/20 flex justify-between items-center">
-              <button
-                onClick={openDeleteModal}
-                className="flex items-center px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-lg transition-colors font-medium"
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete Job
-              </button>
-              <button
-                onClick={() => setIsDetailsModalOpen(false)}
-                className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium"
-              >
-                Close
-              </button>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { icon: <MapPin className="h-3.5 w-3.5" />, label: "Location", value: selectedJob.location },
+                { icon: <Briefcase className="h-3.5 w-3.5" />, label: "Contract", value: selectedJob.contractType },
+                { icon: <DollarSign className="h-3.5 w-3.5" />, label: "Salary", value: selectedJob.salary ? `$${selectedJob.salary}` : "Not specified" },
+                { icon: <Calendar className="h-3.5 w-3.5" />, label: "Posted", value: new Date(selectedJob.createdAt).toLocaleDateString() },
+              ].map((item) => (
+                <div key={item.label} className="rounded-md border border-border/70 bg-muted/30 p-3">
+                  <p className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    {item.icon} {item.label}
+                  </p>
+                  <p className="text-sm font-medium">{item.value}</p>
+                </div>
+              ))}
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {isDeleteModalOpen && selectedJob && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-card w-full max-w-md rounded-lg shadow-[0_20px_60px_hsl(222_38%_9%/0.18)] overflow-hidden animate-in zoom-in-95">
-            <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-destructive flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5" /> Confirm Deletion
-              </h3>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="text-muted-foreground hover:text-foreground">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <p className="text-foreground mb-4">
-                Are you sure you want to permanently delete the job offer <span className="font-semibold">"{selectedJob.title}"</span>?
-              </p>
-              <p className="text-sm text-muted-foreground">
-                This action cannot be undone and will remove all applications associated with this job.
+            <div>
+              <p className="kicker mb-2">Description</p>
+              <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+                {selectedJob.description}
               </p>
             </div>
-            <div className="p-6 border-t border-border bg-muted/20 flex justify-end gap-3">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteJob}
-                className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium"
-              >
-                Delete Permanently
-              </button>
-            </div>
           </div>
-        </div>,
-        document.body
-      )}
+        )}
+      </Modal>
+
+      <Modal
+        open={isDeleteOpen && !!selectedJob}
+        onClose={() => setIsDeleteOpen(false)}
+        title={
+          <span className="flex items-center gap-2 text-destructive">
+            <ShieldAlert className="h-4 w-4" />
+            Confirm Deletion
+          </span>
+        }
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => setIsDeleteOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDeleteJob}>
+              Delete Permanently
+            </Button>
+          </>
+        }
+      >
+        {selectedJob && (
+          <div className="space-y-2">
+            <p className="text-sm text-foreground">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">"{selectedJob.title}"</span>?
+            </p>
+            <p className="text-sm text-muted-foreground">
+              This action cannot be undone and will remove all associated applications.
+            </p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

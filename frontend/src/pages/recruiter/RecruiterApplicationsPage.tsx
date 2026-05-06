@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { formatDate } from "@/lib/utils";
 import { Application, ApplicationStatus, Page } from "@/types";
 import { ApplicationStatusBadge } from "@/components/shared/ApplicationStatusBadge";
+import { ApplicationStatusSelect } from "@/components/shared/ApplicationStatusSelect";
 import { Pagination } from "@/components/shared/Pagination";
 import {
   PageHeader,
@@ -34,6 +35,7 @@ const STATUS_OPTIONS: { label: string; value: string }[] = [
 export function RecruiterApplicationsPage() {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const recruiterApplicationsQueryKey = queryKeys.recruiterApplications(
     page,
@@ -52,14 +54,12 @@ export function RecruiterApplicationsPage() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({
-      appId,
-      status,
-    }: {
-      appId: number;
-      status: ApplicationStatus;
-    }) => applicationService.updateStatus(appId, { status }),
+    mutationFn: ({ appId, status }: { appId: number; status: ApplicationStatus }) => {
+      setUpdatingId(appId);
+      return applicationService.updateStatus(appId, { status });
+    },
     onSuccess: (updatedApplication, variables) => {
+      setUpdatingId(null);
       const nextStatus = updatedApplication.status ?? variables.status;
 
       const patchStatus = (oldPage: Page<Application> | undefined) => {
@@ -67,21 +67,15 @@ export function RecruiterApplicationsPage() {
         if (!oldPage.content.some((app) => app.id === updatedApplication.id)) {
           return oldPage;
         }
-
         return {
           ...oldPage,
           content: oldPage.content.map((app) =>
-            app.id === updatedApplication.id
-              ? { ...app, status: nextStatus }
-              : app
+            app.id === updatedApplication.id ? { ...app, status: nextStatus } : app
           ),
         };
       };
 
-      queryClient.setQueryData<Page<Application>>(
-        recruiterApplicationsQueryKey,
-        patchStatus
-      );
+      queryClient.setQueryData<Page<Application>>(recruiterApplicationsQueryKey, patchStatus);
       queryClient.setQueriesData<Page<Application>>(
         { queryKey: queryKeys.recruiterApplicationsRoot, exact: false },
         patchStatus
@@ -102,6 +96,7 @@ export function RecruiterApplicationsPage() {
         refetchType: "active",
       });
     },
+    onError: () => setUpdatingId(null),
   });
 
   return (
@@ -160,7 +155,7 @@ export function RecruiterApplicationsPage() {
                   className="list-row space-y-3 p-4"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="truncate font-semibold">{app.jobOfferTitle}</h3>
                       <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -176,32 +171,12 @@ export function RecruiterApplicationsPage() {
                     <ApplicationStatusBadge status={app.status} />
                   </div>
 
-                  {/* Status update */}
-                  <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5">
-                    <span className="text-xs text-muted-foreground">Update status:</span>
-                    <Select
-                      value={app.status}
-                      onValueChange={(v) =>
-                        statusMutation.mutate({
-                          appId: app.id,
-                          status: v as ApplicationStatus,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-7 text-xs w-36" id={`status-${app.id}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                        <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                        <SelectItem value="REJECTED">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {statusMutation.isPending && (
-                      <span className="text-xs text-muted-foreground">Saving...</span>
-                    )}
-                  </div>
+                  <ApplicationStatusSelect
+                    appId={app.id}
+                    status={app.status}
+                    onUpdate={(appId, status) => statusMutation.mutate({ appId, status })}
+                    isPending={updatingId === app.id}
+                  />
                 </motion.div>
               ))}
             </div>
@@ -218,4 +193,3 @@ export function RecruiterApplicationsPage() {
     </div>
   );
 }
-

@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { candidateService } from "@/services/candidateService";
 import { queryKeys } from "@/lib/queryKeys";
 import { useAuth } from "@/store/authStore";
-import { StatCard, PageHeader, Skeleton } from "@/components/shared/SharedComponents";
+import { StatCard, PageHeader, Skeleton, QuickActionLink } from "@/components/shared/SharedComponents";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -150,40 +150,11 @@ export function CandidateDashboardPage() {
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
-              {
-                label: "My Applications",
-                description: "Track all your submissions",
-                href: "/candidate/applications",
-                icon: <FileTextIcon className="h-5 w-5" />,
-              },
-              {
-                label: "Browse Jobs",
-                description: "Find new opportunities",
-                href: "/candidate/jobs",
-                icon: <BriefcaseIcon className="h-5 w-5" />,
-              },
-              {
-                label: "Edit Profile",
-                description: "Update your information",
-                href: "/candidate/profile/edit",
-                icon: <UserIcon className="h-5 w-5" />,
-              },
+              { label: "My Applications", description: "Track all your submissions", href: "/candidate/applications", icon: <FileTextIcon className="h-5 w-5" /> },
+              { label: "Browse Jobs", description: "Find new opportunities", href: "/candidate/jobs", icon: <BriefcaseIcon className="h-5 w-5" /> },
+              { label: "Edit Profile", description: "Update your information", href: "/candidate/profile/edit", icon: <UserIcon className="h-5 w-5" /> },
             ].map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="group flex items-center gap-3 rounded-lg border border-border/80 bg-card/90 p-3.5 shadow-[0_1px_2px_hsl(222_38%_9%/0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_24px_hsl(222_38%_9%/0.075)]"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
-                  {item.icon}
-                </div>
-                <div>
-                  <p className="text-sm font-medium transition-colors group-hover:text-primary">
-                    {item.label}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{item.description}</p>
-                </div>
-              </Link>
+              <QuickActionLink key={item.href} {...item} />
             ))}
           </div>
         </motion.div>

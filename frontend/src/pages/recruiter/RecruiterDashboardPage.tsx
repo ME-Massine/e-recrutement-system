@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { recruiterService } from "@/services/recruiterService";
 import { queryKeys } from "@/lib/queryKeys";
 import { useAuth } from "@/store/authStore";
-import { StatCard, PageHeader, Skeleton } from "@/components/shared/SharedComponents";
+import { StatCard, PageHeader, Skeleton, QuickActionLink } from "@/components/shared/SharedComponents";
 import { Button } from "@/components/ui/button";
 import {
   BriefcaseIcon,
@@ -14,7 +14,6 @@ import {
   EyeIcon,
   XCircleIcon,
   PlusCircleIcon,
-  ArrowRightIcon,
   UsersIcon,
 } from "lucide-react";
 
@@ -126,41 +125,11 @@ export function RecruiterDashboardPage() {
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {[
-            {
-              label: "Post a Job",
-              description: "Create a new job offer",
-              href: "/recruiter/job-offers/new",
-              icon: <PlusCircleIcon className="h-5 w-5" />,
-            },
-            {
-              label: "View Applications",
-              description: "Review incoming candidates",
-              href: "/recruiter/applications",
-              icon: <UsersIcon className="h-5 w-5" />,
-            },
-            {
-              label: "My Job Offers",
-              description: "Manage your active listings",
-              href: "/recruiter/job-offers",
-              icon: <BriefcaseIcon className="h-5 w-5" />,
-            },
+            { label: "Post a Job", description: "Create a new job offer", href: "/recruiter/job-offers/new", icon: <PlusCircleIcon className="h-5 w-5" /> },
+            { label: "View Applications", description: "Review incoming candidates", href: "/recruiter/applications", icon: <UsersIcon className="h-5 w-5" /> },
+            { label: "My Job Offers", description: "Manage your active listings", href: "/recruiter/job-offers", icon: <BriefcaseIcon className="h-5 w-5" /> },
           ].map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className="group flex items-center gap-3 rounded-lg border border-border/80 bg-card/90 p-3.5 shadow-[0_1px_2px_hsl(222_38%_9%/0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_24px_hsl(222_38%_9%/0.075)]"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
-                {item.icon}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium transition-colors group-hover:text-primary">
-                  {item.label}
-                </p>
-                <p className="text-xs text-muted-foreground">{item.description}</p>
-              </div>
-              <ArrowRightIcon className="h-3.5 w-3.5 -translate-x-1 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-            </Link>
+            <QuickActionLink key={item.href} {...item} />
           ))}
         </div>
       </motion.div>

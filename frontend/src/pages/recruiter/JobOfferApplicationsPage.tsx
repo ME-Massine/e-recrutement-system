@@ -8,6 +8,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { formatDate } from "@/lib/utils";
 import { Application, ApplicationStatus, Page } from "@/types";
 import { ApplicationStatusBadge } from "@/components/shared/ApplicationStatusBadge";
+import { ApplicationStatusSelect } from "@/components/shared/ApplicationStatusSelect";
 import { Pagination } from "@/components/shared/Pagination";
 import {
   PageHeader,
@@ -15,13 +16,6 @@ import {
   Skeleton,
   ErrorDisplay,
 } from "@/components/shared/SharedComponents";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, UsersIcon, MailIcon, CalendarIcon } from "lucide-react";
 
@@ -31,12 +25,9 @@ export function JobOfferApplicationsPage() {
   const { jobOfferId } = useParams<{ jobOfferId: string }>();
   const offerId = Number(jobOfferId);
   const [page, setPage] = useState(0);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const queryClient = useQueryClient();
-  const jobOfferApplicationsQueryKey = queryKeys.jobOfferApplications(
-    offerId,
-    page,
-    PAGE_SIZE
-  );
+  const jobOfferApplicationsQueryKey = queryKeys.jobOfferApplications(offerId, page, PAGE_SIZE);
 
   const { data: offer } = useQuery({
     queryKey: queryKeys.jobOffer(offerId),
@@ -46,15 +37,17 @@ export function JobOfferApplicationsPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: jobOfferApplicationsQueryKey,
-    queryFn: () =>
-      applicationService.getJobOfferApplications(offerId, page, PAGE_SIZE),
+    queryFn: () => applicationService.getJobOfferApplications(offerId, page, PAGE_SIZE),
     enabled: !!offerId,
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ appId, status }: { appId: number; status: ApplicationStatus }) =>
-      applicationService.updateStatus(appId, { status }),
+    mutationFn: ({ appId, status }: { appId: number; status: ApplicationStatus }) => {
+      setUpdatingId(appId);
+      return applicationService.updateStatus(appId, { status });
+    },
     onSuccess: (updatedApplication, variables) => {
+      setUpdatingId(null);
       const nextStatus = updatedApplication.status ?? variables.status;
 
       const patchStatus = (oldPage: Page<Application> | undefined) => {
@@ -62,21 +55,15 @@ export function JobOfferApplicationsPage() {
         if (!oldPage.content.some((app) => app.id === updatedApplication.id)) {
           return oldPage;
         }
-
         return {
           ...oldPage,
           content: oldPage.content.map((app) =>
-            app.id === updatedApplication.id
-              ? { ...app, status: nextStatus }
-              : app
+            app.id === updatedApplication.id ? { ...app, status: nextStatus } : app
           ),
         };
       };
 
-      queryClient.setQueryData<Page<Application>>(
-        jobOfferApplicationsQueryKey,
-        patchStatus
-      );
+      queryClient.setQueryData<Page<Application>>(jobOfferApplicationsQueryKey, patchStatus);
       queryClient.setQueriesData<Page<Application>>(
         { queryKey: queryKeys.jobOfferApplicationsRoot, exact: false },
         patchStatus
@@ -97,6 +84,7 @@ export function JobOfferApplicationsPage() {
         refetchType: "active",
       });
     },
+    onError: () => setUpdatingId(null),
   });
 
   return (
@@ -113,7 +101,7 @@ export function JobOfferApplicationsPage() {
         description={
           data
             ? `${data.totalElements} candidate${data.totalElements !== 1 ? "s" : ""} applied`
-            : "Loading..."
+            : "Loading…"
         }
       />
 
@@ -153,9 +141,9 @@ export function JobOfferApplicationsPage() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="mb-1 flex items-center gap-2">
                         <MailIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium text-sm">{app.candidateEmail}</span>
+                        <span className="text-sm font-medium">{app.candidateEmail}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <CalendarIcon className="h-3 w-3" />
@@ -165,7 +153,6 @@ export function JobOfferApplicationsPage() {
                     <ApplicationStatusBadge status={app.status} />
                   </div>
 
-                  {/* Cover letter preview */}
                   <div className="rounded-md bg-muted/40 p-3">
                     <p className="mb-1 text-xs font-medium text-muted-foreground">Cover Letter</p>
                     <p className="line-clamp-3 text-sm leading-6 text-foreground/80">
@@ -173,32 +160,12 @@ export function JobOfferApplicationsPage() {
                     </p>
                   </div>
 
-                  {/* Status update */}
-                  <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5">
-                    <span className="text-xs text-muted-foreground">Update status:</span>
-                    <Select
-                      value={app.status}
-                      onValueChange={(v) =>
-                        statusMutation.mutate({
-                          appId: app.id,
-                          status: v as ApplicationStatus,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-7 text-xs w-36" id={`status-${app.id}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                        <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                        <SelectItem value="REJECTED">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {statusMutation.isPending && (
-                      <span className="text-xs text-muted-foreground">Saving...</span>
-                    )}
-                  </div>
+                  <ApplicationStatusSelect
+                    appId={app.id}
+                    status={app.status}
+                    onUpdate={(appId, status) => statusMutation.mutate({ appId, status })}
+                    isPending={updatingId === app.id}
+                  />
                 </motion.div>
               ))}
             </div>
@@ -215,4 +182,3 @@ export function JobOfferApplicationsPage() {
     </div>
   );
 }
-

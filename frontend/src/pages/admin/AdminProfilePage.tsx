@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { useAuth } from "../../store/authStore";
 import adminService from "../../services/adminService";
-import { User, Lock, Mail, User as UserIcon, Save, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Save } from "lucide-react";
+import { PageHeader, FormField, InlineAlert } from "@/components/shared/SharedComponents";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const AdminProfilePage: React.FC = () => {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -31,18 +35,13 @@ const AdminProfilePage: React.FC = () => {
 
     setLoading(true);
     try {
-      const updatedUser = await adminService.updateProfile({
+      await adminService.updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       });
-
-      // Update auth store with new user data (token remains same or we could re-issue it if email changed)
-      // Since our login function in authStore takes AuthResponse, we might need a more granular update
-      // For now, let's just show success message. 
-      // Actually, we should update the local user info.
       setMessage({ type: "success", text: "Profile updated successfully!" });
       setFormData({ ...formData, currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error: any) {
@@ -53,111 +52,82 @@ const AdminProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 animate-in">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Edit Profile</h1>
-        <p className="text-muted-foreground mt-2">Update your administrative account details.</p>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-6 animate-in">
+      <PageHeader
+        title="Edit Profile"
+        description="Update your administrative account details."
+      />
 
-      {message && (
-        <div className={`p-4 rounded-lg flex items-center gap-3 ${
-          message.type === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-        }`}>
-          {message.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <p className="text-sm font-medium">{message.text}</p>
-        </div>
-      )}
+      {message && <InlineAlert type={message.type} message={message.text} />}
 
-      <form onSubmit={handleSubmit} className="surface-card p-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <UserIcon className="w-4 h-4 opacity-70" /> First Name
-            </label>
-            <input
+      <form onSubmit={handleSubmit} className="surface-card p-6 space-y-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <FormField label="First Name" required>
+            <Input
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <UserIcon className="w-4 h-4 opacity-70" /> Last Name
-            </label>
-            <input
+          </FormField>
+          <FormField label="Last Name" required>
+            <Input
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Mail className="w-4 h-4 opacity-70" /> Email Address
-          </label>
-          <input
+        <FormField label="Email Address" required>
+          <Input
             name="email"
             type="email"
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
-        </div>
+        </FormField>
 
-        <div className="pt-6 border-t border-border/50 space-y-6">
-          <div className="flex items-center gap-2 text-primary font-semibold">
-            <Lock className="w-4 h-4" /> Change Password (Optional)
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground">Current Password</label>
-            <input
-              name="currentPassword"
-              type="password"
-              value={formData.currentPassword}
-              onChange={handleChange}
-              placeholder="Enter current password to authorize changes"
-              className="w-full px-4 py-2 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">New Password</label>
-              <input
-                name="newPassword"
+        <div className="pt-1">
+          <Separator className="mb-5" />
+          <p className="mb-5 text-sm font-medium text-primary">Change Password (optional)</p>
+          <div className="space-y-5">
+            <FormField label="Current Password" description="Required to authorize any changes">
+              <Input
+                name="currentPassword"
                 type="password"
-                value={formData.newPassword}
+                value={formData.currentPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="Enter current password"
               />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Confirm New Password</label>
-              <input
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
+            </FormField>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <FormField label="New Password">
+                <Input
+                  name="newPassword"
+                  type="password"
+                  value={formData.newPassword}
+                  onChange={handleChange}
+                />
+              </FormField>
+              <FormField label="Confirm New Password">
+                <Input
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+              </FormField>
             </div>
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
-        >
-          {loading ? "Saving Changes..." : <><Save className="w-5 h-5" /> Save Profile</>}
-        </button>
+        <Button type="submit" disabled={loading} loading={loading} className="w-full">
+          <Save className="h-4 w-4" />
+          Save Changes
+        </Button>
       </form>
     </div>
   );
