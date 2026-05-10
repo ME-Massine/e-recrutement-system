@@ -230,8 +230,8 @@ Guidelines:
 
 ## Author
 
-Backend developed by Massine
-Frontend developed by Amine
+* Backend developed by Massine
+* Frontend developed by Amine
 
 
 ---
