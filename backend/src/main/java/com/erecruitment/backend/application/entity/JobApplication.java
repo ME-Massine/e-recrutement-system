@@ -44,4 +44,11 @@ public class JobApplication {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "job_offer_id", nullable = false)
     private JobOffer jobOffer;
+
+    @PrePersist
+    void ensureAppliedAt() {
+        if (appliedAt == null) {
+            appliedAt = LocalDateTime.now();
+        }
+    }
 }
