@@ -12,6 +12,8 @@ public record JobApplicationResponse(
         ApplicationStatus status,
         LocalDateTime appliedAt,
         Long candidateId,
+        String candidateFirstName,
+        String candidateLastName,
         String candidateEmail,
         Long jobOfferId,
         String jobOfferTitle

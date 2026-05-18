@@ -157,6 +157,8 @@ public class JobApplicationService {
                                 .status(application.getStatus())
                                 .appliedAt(application.getAppliedAt())
                                 .candidateId(application.getCandidate().getId())
+                                .candidateFirstName(application.getCandidate().getFirstName())
+                                .candidateLastName(application.getCandidate().getLastName())
                                 .candidateEmail(application.getCandidate().getEmail())
                                 .jobOfferId(application.getJobOffer().getId())
                                 .jobOfferTitle(application.getJobOffer().getTitle())

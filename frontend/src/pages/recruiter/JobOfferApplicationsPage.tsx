@@ -26,6 +26,7 @@ export function JobOfferApplicationsPage() {
   const offerId = Number(jobOfferId);
   const [page, setPage] = useState(0);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const jobOfferApplicationsQueryKey = queryKeys.jobOfferApplications(offerId, page, PAGE_SIZE);
 
@@ -44,6 +45,7 @@ export function JobOfferApplicationsPage() {
   const statusMutation = useMutation({
     mutationFn: ({ appId, status }: { appId: number; status: ApplicationStatus }) => {
       setUpdatingId(appId);
+      setStatusError(null);
       return applicationService.updateStatus(appId, { status });
     },
     onSuccess: (updatedApplication, variables) => {
@@ -84,7 +86,10 @@ export function JobOfferApplicationsPage() {
         refetchType: "active",
       });
     },
-    onError: () => setUpdatingId(null),
+    onError: () => {
+      setUpdatingId(null);
+      setStatusError("Failed to update application status. Please try again.");
+    },
   });
 
   return (
@@ -123,6 +128,12 @@ export function JobOfferApplicationsPage() {
 
       {!isLoading && !isError && data && (
         <>
+          {statusError && (
+            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+              {statusError}
+            </div>
+          )}
+
           {data.content.length === 0 ? (
             <EmptyState
               icon={<UsersIcon className="h-12 w-12" />}
@@ -141,9 +152,12 @@ export function JobOfferApplicationsPage() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
+                      <p className="mb-1 text-sm font-medium">
+                        {app.candidateFirstName} {app.candidateLastName}
+                      </p>
                       <div className="mb-1 flex items-center gap-2">
                         <MailIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">{app.candidateEmail}</span>
+                        <span className="text-sm text-muted-foreground">{app.candidateEmail}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <CalendarIcon className="h-3 w-3" />

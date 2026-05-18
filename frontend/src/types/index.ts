@@ -118,6 +118,8 @@ export interface Application {
   status: ApplicationStatus;
   appliedAt: string;
   candidateId: number;
+  candidateFirstName: string;
+  candidateLastName: string;
   candidateEmail: string;
   jobOfferId: number;
   jobOfferTitle: string;

@@ -36,6 +36,7 @@ export function RecruiterApplicationsPage() {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const recruiterApplicationsQueryKey = queryKeys.recruiterApplications(
     page,
@@ -56,6 +57,7 @@ export function RecruiterApplicationsPage() {
   const statusMutation = useMutation({
     mutationFn: ({ appId, status }: { appId: number; status: ApplicationStatus }) => {
       setUpdatingId(appId);
+      setStatusError(null);
       return applicationService.updateStatus(appId, { status });
     },
     onSuccess: (updatedApplication, variables) => {
@@ -96,7 +98,10 @@ export function RecruiterApplicationsPage() {
         refetchType: "active",
       });
     },
-    onError: () => setUpdatingId(null),
+    onError: () => {
+      setUpdatingId(null);
+      setStatusError("Failed to update application status. Please try again.");
+    },
   });
 
   return (
@@ -138,6 +143,12 @@ export function RecruiterApplicationsPage() {
 
       {!isLoading && !isError && data && (
         <>
+          {statusError && (
+            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+              {statusError}
+            </div>
+          )}
+
           {data.content.length === 0 ? (
             <EmptyState
               icon={<UsersIcon className="h-12 w-12" />}
@@ -158,6 +169,9 @@ export function RecruiterApplicationsPage() {
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-semibold">{app.jobOfferTitle}</h3>
                       <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <span>
+                          {app.candidateFirstName} {app.candidateLastName}
+                        </span>
                         <span className="flex items-center gap-1">
                           <MailIcon className="h-3 w-3" />
                           {app.candidateEmail}

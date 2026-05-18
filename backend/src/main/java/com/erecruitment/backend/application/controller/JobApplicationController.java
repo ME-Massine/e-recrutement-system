@@ -28,13 +28,14 @@ public class JobApplicationController {
     @PreAuthorize("hasRole('CANDIDATE')")
     public JobApplicationResponse applyToJob(
             @PathVariable Long jobOfferId,
-            @RequestBody ApplyJobRequest request,
+            @Valid @RequestBody ApplyJobRequest request,
             Authentication authentication
     ) {
         return jobApplicationService.applyToJob(jobOfferId, authentication.getName(), request);
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('CANDIDATE')")
     public Page<JobApplicationResponse> getMyApplications(
             Authentication authentication,
             Pageable pageable
